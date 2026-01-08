@@ -18,46 +18,142 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-
+import com.example.sneakershop.ui.CartScreen
+import com.example.sneakershop.ui.CheckoutScreen
+import com.example.sneakershop.ui.WishlistScreen
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.runtime.getValue
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.Color
+import com.example.sneakershop.ui.SplashScreen
+import com.example.sneakershop.ui.ProfileScreen
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import com.example.sneakershop.model.CartManager
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            // 1. Создаем контроллер навигации (наш GPS)
+
             val navController = rememberNavController()
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = navBackStackEntry?.destination?.route
 
-            // 2. Настраиваем карту маршрутов (NavHost)
-            // startDestination — с чего начинать (конечно, с витрины)
-            NavHost(navController = navController, startDestination = "home") {
+            val showBottomBar = currentRoute in listOf("home", "wishlist", "cart", "profile")
 
-                // Экран 1: Витрина
-                composable("home") {
-                    HomeScreen(
-                        onSneakerClick = { sneakerId ->
-                            // Когда нажали на кроссовок, летим на экран деталей
-                            // и передаем ID в адресе, как в браузере: details/1
-                            navController.navigate("details/$sneakerId")
+            Scaffold(
+                bottomBar = {
+                    if (showBottomBar) {
+                        NavigationBar(containerColor = Color.White) {
+                            val items = listOf(
+                                Triple("home", "Home", Icons.Default.Home),
+                                Triple("wishlist", "Wishlist", Icons.Default.Favorite),
+                                Triple("cart", "Cart", Icons.Default.ShoppingCart),
+                                Triple("profile", "Profile", Icons.Default.Person)
+                            )
+                            items.forEach { (route, label, icon) ->
+                                NavigationBarItem(
+                                    icon = {
+
+                                        if (route == "cart" && CartManager.cartItems.isNotEmpty()) {
+                                            BadgedBox(
+                                                badge = {
+                                                    Badge {
+
+                                                        Text(text = CartManager.cartItems.size.toString())
+                                                    }
+                                                }
+                                            ) {
+                                                Icon(icon, contentDescription = label)
+                                            }
+                                        } else {
+                                            Icon(icon, contentDescription = label)
+                                        }
+                                    },
+                                    label = { Text(label) },
+                                    selected = currentRoute == route,
+                                    onClick = {
+                                        navController.navigate(route) { launchSingleTop = true }
+                                    },
+                                    colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                                        indicatorColor = Color.LightGray.copy(alpha = 0.5f)
+                                    )
+                                )
+                            }
                         }
-                    )
+                    }
                 }
+            ) {
+                innerPadding ->
 
-                // Экран 2: Детали
-                // {id} — это переменная часть адреса
-                composable(
-                    route = "details/{id}",
-                    arguments = listOf(navArgument("id") { type = NavType.StringType })
-                ) { backStackEntry ->
-                    // Получаем ID из адреса
-                    val id = backStackEntry.arguments?.getString("id")
+                NavHost(navController = navController, startDestination = "splash", modifier = Modifier.padding(innerPadding)) {
 
-                    // Ищем кроссовок в нашей базе данных по этому ID
-                    val sneaker = SneakerData.list.find { it.id == id }
+                    composable("splash") {
+                        SplashScreen (
+                            onTimeout = {
+                                navController.navigate("home") {
+                                    popUpTo("splash") {inclusive = true}
+                                }
+                            }
+                        )
+                    }
 
-                    // Если нашли — показываем экран
-                    if (sneaker != null) {
-                        DetailsScreen(sneaker = sneaker)
+                    composable("home") {
+                        HomeScreen(
+                            onSneakerClick = { sneakerId -> navController.navigate("details/$sneakerId") },
+                            onCartClick = { navController.navigate("cart") },
+                            onFavoriteClick = { navController.navigate("wishlist") }
+                        )
+                    }
+
+                    composable(
+                        route = "details/{id}",
+                        arguments = listOf(navArgument("id") { type = NavType.StringType })
+                    ) { backStackEntry ->
+
+                        val id = backStackEntry.arguments?.getString("id")
+
+                        val sneaker = SneakerData.list.find { it.id == id }
+
+                        if (sneaker != null) {
+                            DetailsScreen(sneaker = sneaker, onBack = {navController.popBackStack() }
+                            )
+                        }
+                    }
+
+                    composable("cart") {
+                        CartScreen(
+                            onCheckout = { navController.navigate("checkout") }
+                        )
+                    }
+
+                    composable("checkout") {
+                        CheckoutScreen(
+                            onBackToHome = {
+                                navController.navigate("home") {
+                                    popUpTo("home") {inclusive = true}
+                                }
+                            }
+                        )
+                    }
+                    composable("wishlist") {
+                        WishlistScreen(
+                            onSneakerClick = { sneakerId -> navController.navigate("details/$sneakerId") }
+                        )
+                    }
+
+                    composable("profile") {
+                        ProfileScreen()
                     }
                 }
             }

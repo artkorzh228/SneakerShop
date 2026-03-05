@@ -110,9 +110,7 @@ class MainActivity : ComponentActivity() {
 
                     composable("home") {
                         HomeScreen(
-                            onSneakerClick = { sneakerId -> navController.navigate("details/$sneakerId") },
-                            onCartClick = { navController.navigate("cart") },
-                            onFavoriteClick = { navController.navigate("wishlist") }
+                            onSneakerClick = { sneakerId -> navController.navigate("details/$sneakerId") }
                         )
                     }
 

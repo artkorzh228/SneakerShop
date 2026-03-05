@@ -40,7 +40,7 @@ fun DetailsScreen(
     sneaker: Sneaker,
     onBack: () -> Unit
 ) {
-    val sizes = listOf("38", "39", "40", "41", "42", "43")
+    val sizes = (36..50).map { it.toString() }
     var selectedSize by remember { mutableStateOf("") }
     Box(
         modifier = Modifier
@@ -105,7 +105,7 @@ fun DetailsScreen(
                                     shape = RoundedCornerShape(8.dp)
                                 )
                                 .clickable {
-                                    selectedSize = size
+                                    selectedSize = if (selectedSize == size) "" else size
                                 }
                         ) {
                             Text(

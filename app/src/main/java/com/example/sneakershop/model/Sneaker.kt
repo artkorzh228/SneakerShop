@@ -1,9 +1,15 @@
 package com.example.sneakershop.model
 
-data class Sneaker (
-    val id: String, // unique number
-    val name: String, // name of the sneaker
-    val description: String, // description of the sneaker
-    val price: Double, // price of the sneaker
-    val imageUrl: String // link to the image
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "sneakers_table")
+data class Sneaker(
+    @PrimaryKey
+    val id: String,
+    val name: String,
+    val description: String,
+    val price: Double,
+    val imageUrl: String,
+    val category: String
 )

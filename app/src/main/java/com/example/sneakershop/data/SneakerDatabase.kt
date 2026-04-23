@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.sneakershop.model.Sneaker
 
-@Database(entities = [Sneaker::class], version = 1, exportSchema = false)
+@Database(entities = [Sneaker::class], version = 2, exportSchema = false)
 abstract class SneakerDatabase : RoomDatabase() {
 
     abstract fun sneakerDao(): SneakerDao
@@ -22,6 +22,8 @@ abstract class SneakerDatabase : RoomDatabase() {
                     SneakerDatabase::class.java,
                     "sneaker_database"
                 )
+                    // TODO: добавить объекты Migration перед релизом в production
+                    // WARNING: fallbackToDestructiveMigration() стирает все данные при изменении схемы
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
